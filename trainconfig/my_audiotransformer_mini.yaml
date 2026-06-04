@@ -1,0 +1,39 @@
+# 路径映射
+outputpath: experiments
+train_data: my_data_hdf5/labels/my_raw_data.tsv   # 上一步生成的最终 tsv
+eval_data: my_data_hdf5/labels/my_raw_data.tsv    # 数据量小可以先用同文件或切分一部分做验证
+logitspath: my_data_hdf5/                         # 占位，路线A不加载离线蒸馏logits
+
+# 核心分类参数调整
+model: audiotransformer_mini                      # 选择微调网络为 mini 版
+num_classes: 4                                    # 类别数：鸟声、雷声、施工作业声、其他声音
+label_type: zero                                  # 标准的有监督独热/多标签初始化
+loss: BCEWithLogitsLoss                           # 配合模型输出使用的损失函数
+mode: amp                                         # 开启混合精度加速
+
+model_args:
+  outputdim: 4                                    # 覆盖输出层为 4 分类
+  pooling: logit                                  # 采用最后一层的 logit 聚合
+  init_bn: True                                   # 开启初始批归一化
+
+# 训练超参数
+batch_size: 32                                    # 如果显存大可以调到 64 
+epochs: 30                                        # 微调一般 30-50 轮即可
+num_workers: 4                                    # 数据加载线程
+# optimizer: Adam8bit                               # 使用 bitsandbytes 优化器
+# optimizer_args:
+#     lr: 0.0003                                    # 迁移学习微调，学习率不宜过大
+# 修改后：
+optimizer: Adam
+optimizer_args:
+    lr: 0.0003
+    betas: [0.9, 0.999]
+    eps: 0.00000001
+
+valid_every: 1                                    # 每个 epoch 跑一次验证
+early_stop: 7                                     # 连续 7 个轮次指标不提升则停止
+n_saved: 3                                        # 磁盘保留最优模型的个数
+use_scheduler: True
+warmup_iters: 500                                 # 预热步数
+mixup: 0.3                                        # 针对小数据集，开启 0.3 的 Mixup 混合增强
+disable_consistency: True                         # 关键：由于没有多余的无标签蒸馏流，关闭一致性正则
