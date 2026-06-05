@@ -5,7 +5,7 @@ eval_data: my_data_hdf5/labels/my_raw_data.tsv    # 数据量小可以先用同文件或切分
 logitspath: my_data_hdf5/                         # 占位，路线A不加载离线蒸馏logits
 
 # 核心分类参数调整
-model: audiotransformer_mini                      # 选择微调网络为 mini 版
+model: audiotransformer_small                      # 选择微调网络为 mini 版
 num_classes: 4                                    # 类别数：鸟声、雷声、施工作业声、其他声音
 label_type: zero                                  # 标准的有监督独热/多标签初始化
 loss: CrossEntropyLoss                           # 配合模型输出使用的损失函数
